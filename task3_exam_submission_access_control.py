@@ -8,6 +8,12 @@ def menu():
         print("5 Exit system")
         print()
 
+def get_file_extension(filename):
+
+        filename_split, extension = os.path.splitext(filename)
+
+        return extension
+
 def exit_system():
         while True:
                 confirm = input("Are you sure you want to exit? (Enter Y to confirm, N to deny): ")
