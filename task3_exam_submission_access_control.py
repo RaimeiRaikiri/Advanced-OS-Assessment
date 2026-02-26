@@ -7,4 +7,24 @@ def menu():
         print()
 
 def main():
-	pass
+	print("Welcome to the secure examination and access control system!")
+	print()
+
+	all_files = []
+
+	while True:
+		menu()
+		choice = input("Select your choice from the menu: ")
+		print()
+
+		match int(choice):
+			case 1:
+				pass
+			case 2:
+				pass
+			case 3:
+				pass
+			case 4:
+				pass
+			case 5:
+				pass
