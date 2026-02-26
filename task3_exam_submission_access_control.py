@@ -1,4 +1,5 @@
-import os, time
+import os, datetimeo
+
 
 heading = f"{'Timestamp':<30}{'Type':<20}{'Student ID':<20}{'Filename':<30}\n"
 
@@ -35,7 +36,7 @@ def submit_file(all_files):
 			continue
 
 	filename = available_submission_files[int(choice) - 1]
-	file_size = get_file_size(filename)
+	file_size = get_filesize(filename)
 	file_extension = get_file_extension(filename)
 
 	# Check to ensure submission is docx or pdf
