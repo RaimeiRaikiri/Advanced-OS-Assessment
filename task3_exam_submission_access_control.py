@@ -118,6 +118,14 @@ def get_filesize(filepath):
 
         return size_bytes
 
+def get_list_of_all_files(starting_point):
+        files = []
+        for directory_path, directory_names, file_names in os.walk(starting_point):
+                for file in file_names:
+                        path = os.path.join(directory_path, file)
+                        files.append(path)
+
+        return files
 
 def exit_system():
         while True:
