@@ -8,6 +8,104 @@ def menu():
         print("5 Exit system")
         print()
 
+def submit_file(all_files):
+	# Get all files in the current directory, including files in subdirectories. 
+        available_submission_files = get_list_of_all_files(".")
+
+        while True:
+                itr = print_numbered_list(available_submission_files)
+                print()
+                choice = input("Select a file to upload from this directory: ")
+
+                try :
+			# If the user inputs a valid choice proceed
+                        if int(choice) > 0 and int(choice) <= itr:
+                                break
+                        else:
+                                print()
+                                print(f"You have not selected a valid file, try again (numbers 1 - {itr})!")
+                                print()
+                                continue
+                except:
+                        print()
+                        print(f"You have not even entered a number, try again!")
+                        print()
+                        continue
+
+        filename = available_submission_files[int(choice) - 1]
+        file_size = get_file_size(filename)
+        file_extension = get_file_extension(filename)
+
+	# Check to ensure submission is docx or pdf
+        if (file_extension == ".docx") or (file_extension == ".pdf"):
+
+                # Check if the file is less than 5 mb in size
+                if file_size < 5 * (1024 ** 2):
+
+			# Check for identical filename
+                        identical_filename = False
+                        for file in all_files:
+                                if filename == file:
+                                        identical_filename = True
+                                        break
+
+                        if identical_filename == False:
+				""" Check for identical filesize,
+				if they are the same size they could be identical in content
+				so it requires further inspection
+				"""
+                                identical_filesizes = []
+                                for file in all_files:
+                                        if file_size != get_file_size(file):
+                                                continue
+                                        else:
+                                                identical_filesizes.append(file)
+                                                continue
+
+                                if not identical_filesizes:
+					# If the file sizes arent identical, its not the same file so submit
+                                        log_event(["", filename], "Submission")
+                                        return filename
+                                else:
+					# Inspect all identical sized files line by line to compare content
+                                        identical_file = False
+                                        for file in identical_filesizes:
+                                                with open(filename, "rb") as f1, open(file, "rb") as f2:
+                                                        while True:
+                                                                binary_1 = f1.read(4096)
+                                                                binary_2 = f2.read(4096)
+
+								# Compare line by line, if a single file is identical the file cannot be submitted
+                                                                if binary_1 != binary_2:
+                                                                        break
+                                                                if not binary_1:
+									identical_file = True
+                                                                        break
+                                                if identical_file:
+                                                        break
+
+                                        if not identical_file:
+                                                log_event(["", filename], "Submission")
+                                                return filename
+
+                                        else:
+                                                print()
+                                                print("This files contents is identical to another that has been previously submitted, and therefore cannot be accepted!")
+                                                print()
+                        else:
+                                print()
+                                print("This filename is identical to another that has been submitted previously, and therefore cannot be accepted!")
+                                print()
+                else:
+                        print()
+                        print("This file is larger than 5 mb and therefore cannot be accepted!")
+                        print()
+        else:
+                print()
+                print("This file is not a pdf or docx and therefore cannot be accepted!")
+                print()
+
+
 def get_file_extension(filename):
 
         filename_split, extension = os.path.splitext(filename)
