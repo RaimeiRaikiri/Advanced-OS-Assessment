@@ -1,3 +1,5 @@
+heading = f"{'Timestamp':<30}{'Type':<20}{'Student ID':<20}{'Filename':<30}\n"
+
 def menu():
         print("1 Submit an assignment")
         print("2 Check if a file has been submitted")
