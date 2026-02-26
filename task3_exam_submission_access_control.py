@@ -14,6 +14,13 @@ def get_file_extension(filename):
 
         return extension
 
+def get_filesize(filepath):
+
+        size_bytes = os.stat(filepath).st_size
+
+        return size_bytes
+
+
 def exit_system():
         while True:
                 confirm = input("Are you sure you want to exit? (Enter Y to confirm, N to deny): ")
