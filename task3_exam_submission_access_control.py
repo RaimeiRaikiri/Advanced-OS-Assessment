@@ -1,4 +1,4 @@
-import os, datetimeo
+import os, datetime
 
 
 heading = f"{'Timestamp':<30}{'Type':<20}{'Student ID':<20}{'Filename':<30}\n"
