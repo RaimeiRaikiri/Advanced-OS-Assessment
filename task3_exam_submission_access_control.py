@@ -167,6 +167,8 @@ def log_event(values, type):
 			try:
 				if values[x]:
 					submission_file.write(f"{values[x]:<20}")
+				else:
+					submission_file.write(f"{'':<20}")
 			except:
 				submission_file.write(f"{'':<20}")
 		submission_file.write("\n")
@@ -240,4 +242,6 @@ def main():
 				pass
 			case 5:
 				exit_system()
+
 main()
+
