@@ -132,6 +132,15 @@ def get_list_of_all_files(starting_point):
 
         return files
 
+def print_numbered_list(values):
+	itr = 0
+
+	for item in values:
+		itr += 1
+		print(str(itr) + " - " + item)
+
+	return itr
+
 def log_event(values, type):
 	"""
 	Log events in the desired format, to the submission log 
@@ -202,7 +211,7 @@ def main():
 
 		match int(choice):
 			case 1:
-				pass
+				submit_file(all_files)
 			case 2:
 				pass
 			case 3:
@@ -211,3 +220,4 @@ def main():
 				pass
 			case 5:
 				exit_system()
+main()
