@@ -108,6 +108,17 @@ def submit_file(all_files):
        		print("This file is not a pdf or docx and therefore cannot be accepted!")
        		print()
 
+def check_file_submitted(all_files):
+	filepath = input("Enter full file path: ")
+	if filepath:
+		for file in all_files:
+			if file == filepath:
+				return True, file
+
+			return False, filepath
+
+	else:
+		return False, filepath
 
 def get_file_extension(filename):
 
@@ -214,7 +225,12 @@ def main():
 			case 1:
 				submit_file(all_files)
 			case 2:
-				pass
+				file_submitted, file = check_file_submitted(all_files)
+
+				if file_submitted:
+					print()
+					print(f"File {file} submitted previously!")
+					print()
 			case 3:
 				pass
 			case 4:
