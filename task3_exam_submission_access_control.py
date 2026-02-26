@@ -122,15 +122,16 @@ def get_filesize(filepath):
         return size_bytes
 
 def get_list_of_all_files(starting_point):
-        files = []
+	files = []
 	# Traverse the current directory recursively, returning paths for all files
 	# including those in subdirectories,
-        for directory_path, directory_names, file_names in os.walk(starting_point):
-                for file in file_names:
-                        path = os.path.join(directory_path, file)
-                        files.append(path)
+	for directory_path, directory_names, file_names in os.walk(starting_point):
+		for file in file_names:
+				path = os.path.join(directory_path, file)
+				if path[:6] != "./.git":
+					files.append(path)
 
-        return files
+	return files
 
 def print_numbered_list(values):
 	itr = 0
