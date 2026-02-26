@@ -224,7 +224,9 @@ def main():
 
 		match int(choice):
 			case 1:
-				submit_file(all_files)
+				filename = submit_file(all_files)
+				if filename:
+					all_files.append(filename)
 			case 2:
 				file_submitted, file = check_file_submitted(all_files)
 
