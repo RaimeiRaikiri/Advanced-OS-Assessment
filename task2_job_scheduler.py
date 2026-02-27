@@ -2,10 +2,10 @@ heading =f"{'Job Name':<20}{'Student ID':<20}{'Estimated execution time':<30}{'P
 
 
 def menu():
-	print("1 Submit an assignment")
-	print("2 Check if a file has been submitted")
-	print("3 List all submitted assignments")
-	print("4 Simulate login attempt")
+	print("1 - View pending jobs")
+	print("2 - Submit a job request")
+	print("3 - Process job queue")
+	print("4 - View completed jobs")
 	print("5 Exit system")
 	print()
 
@@ -32,6 +32,10 @@ def exit_system():
 			print()
 			continue
 def main():
+
+	print("Welcome to the high performance job scheduler!")
+	print()
+	
 	while True:
 
 		"""
@@ -60,7 +64,22 @@ def main():
 
 		match int(choice):
 			case 1:
-				pass
+				with open("job_queue.txt", "r") as pending_file:
+					if pending_file.readline():
+						if pending_file.readline():
+							pending_file.seek(0)
+
+							print()
+							print("List of pending jobs: ")
+							print()
+
+							for line in pending_file.readlines():
+								print(line.strip())
+							print()
+						else:
+							print()
+							print("No jobs pending!")
+							print()
 			case 2:
 				pass
 			case 3:
