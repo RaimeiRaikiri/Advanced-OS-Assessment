@@ -6,6 +6,13 @@ def menu():
 	print("5 Exit system")
 	print()
 
+def create_job_request():
+	name = input("Enter job name: ")
+	student_id = input("Enter student ID: ")
+	estimated_execution_time = input("Enter estimated execution time (in seconds): ")
+	priority = input("Enter job priority (1-10): ")
+	print()
+
 def exit_system():
 	while True:
 		confirm = input("Are you sure you want to exit? (Enter Y to continue, N to deny): ")
