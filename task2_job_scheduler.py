@@ -21,7 +21,7 @@ def log_event(values, type):
 	current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 	with open("scheduler_log.txt", "a") as log_file:
-		log_file.write(f"{current_time:<30}{type:<20}{values[0]:<20}{values[1]:<20}{values[2]:<30}{values[3]:<20}\n')
+		log_file.write(f"{current_time:<30}{type:<20}{values[0]:<20}{values[1]:<20}{values[2]:<30}{values[3]:<20}\n")
 
 def exit_system():
 	while True:
@@ -88,12 +88,18 @@ def main():
 							print("No jobs pending!")
 							print()
 			case 2:
-				pass
+				job_values =  create_job_request()
+
+				with open("job_queue.txt", "a") as pending_file:
+					pending_file.write(f"{job_values[0]:<20}{job_values[1]:<20}{job_values[2]:<30}{job_values[3]:<20}\n")
+
+				log_event(job_values, "Submission")
+
 			case 3:
 				pass
 			case 4:
 				pass
 			case 5:
 				exit_system()
-		
 
+main()
