@@ -17,6 +17,8 @@ def create_job_request():
 	priority = input("Enter job priority (1-10): ")
 	print()
 
+	return [name, student_id, estimated_execution_time, priority]
+
 def log_event(values, type):
 	current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
