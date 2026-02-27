@@ -1,5 +1,6 @@
-heading =f"{'Job Name':<20}{'Student ID':<20}{'Estimated execution time':<30}{'Priority':<20}\n"
+import datetime, heapq
 
+heading =f"{'Job Name':<20}{'Student ID':<20}{'Estimated execution time':<30}{'Priority':<20}\n"
 
 def menu():
 	print("1 - View pending jobs")
@@ -15,6 +16,12 @@ def create_job_request():
 	estimated_execution_time = input("Enter estimated execution time (in seconds): ")
 	priority = input("Enter job priority (1-10): ")
 	print()
+
+def log_event(values, type):
+	current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+	with open("scheduler_log.txt", "a") as log_file:
+		log_file.write(f"{current_time:<30}{type:<20}{values[0]:<20}{values[1]:<20}{values[2]:<30}{values[3]:<20}\n')
 
 def exit_system():
 	while True:
