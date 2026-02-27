@@ -1,3 +1,6 @@
+heading =f"{'Job Name':<20}{'Student ID':<20}{'Estimated execution time':<30}{'Priority':<20}\n"
+
+
 def menu():
 	print("1 Submit an assignment")
 	print("2 Check if a file has been submitted")
@@ -30,6 +33,27 @@ def exit_system():
 			continue
 def main():
 	while True:
+
+		"""
+		 Open all log and job files, check if they exist
+		 and have a header. If not add the header and/or create file
+		 """
+
+		with open("job_queue.txt", "a+") as pending_file:
+			pending_file.seek(0)
+			if not pending_file.readline():
+				pending_file.write(heading)
+
+		with open("scheduler_log.txt", "a+") as log_file:
+			log_file.seek(0)
+			if not log_file.readline():
+				log_file.write(f"{'Timestamp':<30}{'Type':<20}" + heading)
+
+		with open("completed_jobs.txt", "a+") as completed_file:
+			completed_file.seek(0)
+			if not completed_file.readline():
+				completed_file.write(heading)
+
 		menu()
 		print()
 		choice = input("Select a file to upload from this directory: ")
