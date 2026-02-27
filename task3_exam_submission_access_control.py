@@ -140,6 +140,7 @@ def get_list_of_all_files(starting_point):
 	for directory_path, directory_names, file_names in os.walk(starting_point):
 		for file in file_names:
 				path = os.path.join(directory_path, file)
+				# Remove git files from the options to submit
 				if path[:6] != "./.git":
 					files.append(path)
 
