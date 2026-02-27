@@ -22,4 +22,21 @@ def exit_system():
 			print()
 			continue
 def main():
-	pass
+	while True:
+		menu()
+		print()
+		choice = input("Select a file to upload from this directory: ")
+
+		match int(choice):
+			case 1:
+				pass
+			case 2:
+				pass
+			case 3:
+				pass
+			case 4:
+				pass
+			case 5:
+				exit_system()
+		
+
