@@ -131,7 +131,20 @@ def main():
 				priority_processing("job_queue.txt", "completed_jobs.txt")
 
 			case 4:
-				pass
+				with open("completed_jobs.txt", "r") as completed_file:
+					if completed_file.readline():
+						completed_file.seek(0)
+
+						print()
+						print("List of completed jobs: ")
+						print()
+						for line in completed_file.readlines():
+							print(line.strip())
+						print()
+					else:
+						print()
+						print("No jobs completed!")
+						print()
 			case 5:
 				exit_system()
 
