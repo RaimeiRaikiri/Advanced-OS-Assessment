@@ -7,7 +7,7 @@ def menu():
 	print("2 - Submit a job request")
 	print("3 - Process job queue")
 	print("4 - View completed jobs")
-	print("5 Exit system")
+	print("5 - Exit system")
 	print()
 
 def create_job_request():
@@ -18,6 +18,36 @@ def create_job_request():
 	print()
 
 	return [name, student_id, estimated_execution_time, priority]
+
+def priority_processing(job_queue_fname, job_completed_fname):
+	processes = []
+	itr = 0
+	with open(job_queue_fname, "r") as jobs, open(job_completed_fname, "a") as job_complete:
+
+		""" Set cursor to secondline, to avoid header of file """
+		jobs.readline()
+
+		for job in jobs.readlines():
+			itr += 1
+			values = job.split()
+			processes.append((values[3], itr, values[0], values[1], values[2]))
+
+		heapq.heapify(processes)
+
+		while processes:
+			priority, entry_position, name, student_id, estimated_execution_time = heapq.heappop(processes)
+			print(f"Executing job {name} given to student {student_id}, it is estimated to take  {estimated_execution_time} seconds. Priority {priority}")
+			values = [name, student_id, estimated_execution_time, priority]
+
+			job_complete.write(f"{values[0]:<20}{values[1]:<20}{values[2]:<30}{values[3]:<20}\n")
+			log_event(values, "Process")
+
+		""" After processing jobs remove them all from the file, but keep the heading """
+		print()
+		print("All pending jobs moved to completed jobs!")
+		print()
+		with open(job_queue_fname, "w") as job_file:
+			job_file.write(heading)
 
 def log_event(values, type):
 	current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -98,7 +128,8 @@ def main():
 				log_event(job_values, "Submission")
 
 			case 3:
-				pass
+				priority_processing("job_queue.txt", "completed_jobs.txt")
+
 			case 4:
 				pass
 			case 5:
