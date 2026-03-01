@@ -22,6 +22,7 @@ echo "Top 10 memory consuming processes"
 echo
 
 ps -eo pid,ppid,user,%cpu,%mem --sort=-%mem | head
+log_event "MEMORY top 10 memory consuming processes listed successfully"
 }
 
 main_loop(){
@@ -35,7 +36,7 @@ read -r -p "Select choice: " choice
 echo
 case "$choice" in
 
-	1) ;;
+	1) top;;
 	2) list_top10_memory ;;
 	3) ;;
 	4) ;;
