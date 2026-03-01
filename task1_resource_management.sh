@@ -1,5 +1,13 @@
 #!/user/bin/env bash
 
+BASE_DIR="$HOME"
+LOG_FILE="$BASE_DIR/system_monitor_log.txt"
+
+log_event(){
+local msg="$1"
+printf "%s %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$msg" >> "$LOG_FILE"
+}
+
 print_main_menu(){
 echo "1 - Display CPU and Memory"
 echo "2 - List Top 10 Memory Users"
