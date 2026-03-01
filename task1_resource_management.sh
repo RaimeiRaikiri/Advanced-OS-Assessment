@@ -9,6 +9,13 @@ echo "5 - Exit"
 echo
 }
 
+list_top10_memory(){
+echo "Top 10 memory consuming processes"
+echo
+
+ps -eo pid,ppid,user,%cpu,%mem --sort=-%mem | head
+}
+
 main_loop(){
 
 while true; do
@@ -21,7 +28,7 @@ echo
 case "$choice" in
 
 	1) ;;
-	2) ;;
+	2) list_top10_memory ;;
 	3) ;;
 	4) ;;
 	5) ;;
