@@ -1,4 +1,4 @@
-#!/user/bin/env bash
+#!/usr/bin/env bash
 
 BASE_DIR="$HOME"
 LOG_FILE="$BASE_DIR/system_monitor_log.txt"
@@ -36,7 +36,7 @@ read -r -p "Select choice: " choice
 echo
 case "$choice" in
 
-	1) top;;
+	1) top && log_event "MEMORY CPU display cpu and memory successfully";;
 	2) list_top10_memory ;;
 	3) ;;
 	4) ;;
