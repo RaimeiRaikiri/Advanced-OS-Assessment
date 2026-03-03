@@ -21,8 +21,47 @@ list_top10_memory(){
 echo "Top 10 memory consuming processes"
 echo
 
-ps -eo pid,ppid,user,%cpu,%mem --sort=-%mem | head
+echo "$(ps -eo pid,ppid,user,%cpu,%mem --sort=-%mem | head)"
 log_event "MEMORY top 10 memory consuming processes listed successfully"
+}
+
+terminate_processes(){
+read -r -p "Select process to elimainate (enter PID): " pid
+if ! ps -p "$pid" > /dev/null; then
+	log_event "PROCESS to terminate not found"
+	echo "PID $pid does not exist."
+	exit 1
+fi
+
+while true; do
+
+	read -r -p "Are you sure you want to terminate process of PID $pid > (Enter Y to confirm, N to deny): " confirm
+	if  [[ "$confirm" == "Y" ]] || [[ "$confirm" == "y" ]]; then
+
+		if [ $(ps -o ppid= "$pid") == 1 ] ; then
+			log_event "PROCESS PID $pid termination cancelled as root is 1"
+			echo
+			echo "Process termination canelled due to ppid = 1"
+		elif [ $(ps -o user= "$pid") == "root" ] ; then
+			log_event "PROCESS PID $pid  termination cancelled as user is root"
+			echo
+			echo "Termination of process $pid cancelled as user is root"
+		else
+			log_event "PROCESS PID $pid terminated successfully"
+			kill "$pid" && echo && echo "PID $pid terminated"
+		fi
+		break
+
+	elif [[ "$confirm" == "N" ]] || [[ "$confirm" == "n" ]];  then
+		log_event "PROCESS PID $pid termination cancelled"
+		echo "Termination of $pid cancelled"
+		break
+	else
+		log_event "PROCESS termination failed, invalid confirmation"
+		echo "Invalid choice, try again"
+		continue
+	fi
+done
 }
 
 exit_system(){
@@ -58,7 +97,7 @@ case "$choice" in
 
 	1) top && log_event "MEMORY CPU display cpu and memory successfully";;
 	2) list_top10_memory ;;
-	3) ;;
+	3) terminate_processes;;
 	4) ;;
 	5) exit_system ;;
 	*) echo "Invalid choice" ;;
@@ -66,5 +105,6 @@ case "$choice" in
 	echo
 done
 }
+
 
 main_loop
