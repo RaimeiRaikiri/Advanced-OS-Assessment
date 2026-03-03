@@ -25,6 +25,26 @@ ps -eo pid,ppid,user,%cpu,%mem --sort=-%mem | head
 log_event "MEMORY top 10 memory consuming processes listed successfully"
 }
 
+exit_system(){
+
+while true; do
+
+	read -r -p "Are you sure you want to exit? (Y to confirm, N to deny): " confirm
+	if [[ "$confirm" == "Y" ]] || [[ "$confirm" == "y" ]]; then
+		log_event "EXIT system exited successfully"
+		echo "Shutting down. See you next time!" && exit
+	elif [[ "$confirm" == "N" ]] || [[ "$confirm" == "n" ]]; then
+		log_event "EXIT system exit cancelled"
+		echo "You've chosen to stay in the system."
+		break
+	else 
+		log_event "EXIT system exit failed, invalid confirmation"
+		echo "Invalid choice, try again!"
+		continue
+	fi
+done
+}
+
 main_loop(){
 
 while true; do
@@ -40,7 +60,7 @@ case "$choice" in
 	2) list_top10_memory ;;
 	3) ;;
 	4) ;;
-	5) ;;
+	5) exit_system ;;
 	*) echo "Invalid choice" ;;
 	esac
 	echo
