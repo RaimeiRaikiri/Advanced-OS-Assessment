@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-BASE_DIR="$HOME"
-LOG_FILE="$BASE_DIR/system_monitor_log.txt"
+LOG_DIR="./Archive_logs"
+LOG_FILE="./system_monitor_log.txt"
+FILE_SIZE_LIMIT=50
 
 log_event(){
 local msg="$1"
@@ -64,6 +65,13 @@ while true; do
 done
 }
 
+check_archive_directory() {
+if [ ! -d "$LOG_DIR" ]; then
+	mkdir "$LOG_DIR"
+	echo "Archive directory created as it didn't exist"
+fi
+}
+
 exit_system(){
 
 while true; do
@@ -85,6 +93,8 @@ done
 }
 
 main_loop(){
+
+check_archive_directory
 
 while true; do
 echo "Welcome to the Resource Management System"
