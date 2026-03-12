@@ -2,7 +2,8 @@
 
 LOG_DIR="./Archive_logs"
 LOG_FILE="./system_monitor_log.txt"
-FILE_SIZE_LIMIT=50
+FILE_SIZE_LIMIT=50000000
+DIR_SIZE_LIMIT=1000000000
 
 log_event(){
 local msg="$1"
@@ -29,7 +30,7 @@ log_event "MEMORY top 10 memory consuming processes listed successfully"
 terminate_processes(){
 read -r -p "Select process to elimainate (enter PID): " pid
 if ! ps -p "$pid" > /dev/null; then
-	log_event "PROCESS to terminate not found"
+	log_event "PROCESS process to terminate not found"
 	echo "PID $pid does not exist."
 	exit 1
 fi
@@ -65,10 +66,31 @@ while true; do
 done
 }
 
-check_archive_directory() {
+create_archive_directory() {
 if [ ! -d "$LOG_DIR" ]; then
 	mkdir "$LOG_DIR"
+
 	echo "Archive directory created as it didn't exist"
+	log_event "ARCHIVE archive directory created because one didn't exist"
+	check_archive_directory
+fi
+}
+
+check_archive_directory(){
+if [ -d "$LOG_DIR" ]; then
+	if [ "$( du  -b "$LOG_DIR" | cut -f1)" -gt "$DIR_SIZE_LIMIT" ] ; then
+		echo "Archive folder exceeds 1GB"
+		log_event "ARCHIVE archive folder exceeds 1GB"
+	fi
+fi
+}
+
+check_log_size(){
+echo "$(stat -c %s $LOG_FILE)"
+
+if [ $"(stat -c %s $LOG_FILE)" > "$FILE_SIZE_LIMIT" ]; then
+	mv "$LOG_FILE" "$LOG_DIR/ArchivedLog_$(date '+%Y-%m-%d %H:%M:%S')"
+	log_event "LOG current log file exceeds 50mb so is being moved to archives"
 fi
 }
 
@@ -94,7 +116,7 @@ done
 
 main_loop(){
 
-check_archive_directory
+create_archive_directory
 
 while true; do
 echo "Welcome to the Resource Management System"
@@ -115,6 +137,5 @@ case "$choice" in
 	echo
 done
 }
-
 
 main_loop
