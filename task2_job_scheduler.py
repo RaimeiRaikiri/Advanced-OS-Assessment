@@ -28,8 +28,10 @@ def priority_processing(job_queue_fname, job_completed_fname):
 		jobs.readline()
 
 		for job in jobs.readlines():
+			# Itr is used to keep track of the time of entry to be used as tie breaker for jobs with the same priority
 			itr += 1
 			values = job.split()
+			# Ordered with priority first and itr second so the min heap is structured correctly
 			processes.append((values[3], itr, values[0], values[1], values[2]))
 
 		heapq.heapify(processes)
