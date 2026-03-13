@@ -7,6 +7,11 @@ echo "5 Exit system"
 echo
 }
 
+get_file_extension(){
+	name="$1"
+	echo "${name##*.}"
+}
+
 exit_system(){
 while true; do
 
@@ -19,7 +24,11 @@ while true; do
 	else
 		echo "Invalid choice, try again!"
 		continue
+	fi
+
+done
 }
+
 main_loop(){
 echo "Welcome to the secure examination and access control system!"
 echo
@@ -41,3 +50,5 @@ case "$choice" in
 	echo
 done
 }
+
+
