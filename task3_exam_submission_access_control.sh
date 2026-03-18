@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 menu(){
 echo "1 Submit an assignment"
 echo "2 Check if a file has been submitted"
