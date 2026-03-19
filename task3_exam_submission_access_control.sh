@@ -76,7 +76,7 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 				fi
 			done
 			
-			if [ ${#identical_filesize[@]} -eq 0]; then
+			if [[ ${#identical_filesize[@]} -eq 0 ]]; then
 				log_event "" "$file_path" "Submission"
 				echo "$file_path"
 			else
@@ -129,12 +129,12 @@ echo "$itr"
 
 log_event() {
 	if [[ "$3" == "Submission" ]] || [[ "$3" == "submission" ]]; then
-		printf "%-30s %-20s" "$(date '+%Y-%m-%d %H:%M:%S')" "$3" >> "submission_log.txt"
+		printf "%-30s%-20s" "$(date '+%Y-%m-%d %H:%M:%S')" "$3" >> "submission_log.txt"
 		local arr=("$@")
 
-		for i in ${0..2}; do
+		for ((i=0; i<2; i++)); do
 			if [ -z "${arr[i]}" ]; then
-				printf "%-20s" "" >> "submission_log.txt"
+ 				printf "%-20s" "" >> "submission_log.txt"
 			else
 				printf "%-20s" "${arr[i]}" >> "submission_log.txt"
 			fi
