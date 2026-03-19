@@ -10,14 +10,15 @@ echo
 }
 
 get_file_extension(){
-name="$1"
+local name="$1"
 echo "${name##*.}"
 
 }
 
 submit_file() {
 
-all_files="$@"
+local all_files="$@"
+local files=()
 
 # Put all possible submission files in an array excluding git files
 # Including files in subdirectories
@@ -25,7 +26,7 @@ mapfile -t files < <(find . -type f ! -path "./.git/*")
 
 while true; do
 	# Print the submission options and ask for the user choice
-	itr=$(print_numbered_list "${files[@]}")
+	local itr=$(print_numbered_list "${files[@]}")
 	echo
 	read -r -p "Select a file to upload from this directory (from the numbered list): " choice
 	
@@ -41,10 +42,9 @@ while true; do
 
 done
 
-let file_option=$(($choice - 1))
-file_path="${files[$file_option]}"
-file_size=$(wc -c < "$file_path")
-file_extension=$(get_file_extension "$file_path")
+local file_path="${files[(($choice -1))]}"
+local file_size=$(wc -c < "$file_path")
+local file_extension=$(get_file_extension "$file_path")
 
 echo "path: $file_path"
 echo "size: $file_size"
@@ -54,7 +54,7 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 
 	if [[ "$file_size" -lt $((5 * (1024 * 1024))) ]]; then
 
-		identical_filepath=false
+		local identical_filepath=false
 		for file in "$all_files"; do
 
 			if [[ "$file_path" == "$file" ]]; then
@@ -65,7 +65,7 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
  
 		if [[ "$identical_filepath" == false ]]; then
 
-			declare -a identical_filesizes=()
+			local -a identical_filesizes=()
 			for file in "$all_files"; do
 
 				if [[ "$file_size" != $(wc -c < "$file") ]]; then
@@ -80,7 +80,7 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 				log_event "" "$file_path" "Submission"
 				echo "$file_path"
 			else
-				identical_file=false
+				local identical_file=false
 				for file in "${identical_filesize[@]}"; do
 
 					if cmp -s "$filepath" "$file"; then
@@ -89,7 +89,7 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 					fi
 				done
 				if [ identical_file == true ]; then
-					log_event "" "$file_path" "Submission")
+					log_event "" "$file_path" "Submission"
 					echo "$file_path"
 				else
 					echo <&2
@@ -116,7 +116,7 @@ fi
 }
 
 print_numbered_list(){
-itr=0
+local itr=0
 
 for item in "$@"; do
 	((itr++)) 
@@ -129,7 +129,7 @@ echo "$itr"
 
 log_event() {
 	if [[ "$3" == "Submission" ]] || [[ "$3" == "submission" ]]; then
-		printf "%-30s %-20s" "$(date '+%Y-%m-%d %H:%M:%S')" "$3" << "submission_log.txt"
+		printf "%-30s %-20s" "$(date '+%Y-%m-%d %H:%M:%S')" "$3" >> "submission_log.txt"
 		local arr=("$@")
 
 		for i in ${0..2}; do
@@ -140,7 +140,7 @@ log_event() {
 			fi
 		done
 		
-		printf "\n" << "submission_log.txt"
+		printf "\n" >> "submission_log.txt" 
 	fi
 }
 exit_system(){
