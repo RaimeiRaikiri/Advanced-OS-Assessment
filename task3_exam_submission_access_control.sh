@@ -10,8 +10,21 @@ echo
 }
 
 get_file_extension(){
-	name="$1"
-	echo "${name##*.}"
+name="$1"
+echo "${name##*.}"
+
+}
+
+print_numbered_list(){
+itr=0
+
+for item in "$@"; do
+	((itr++)) 
+	
+	echo "$itr - $item"
+done
+
+echo "$itr"
 }
 
 exit_system(){
@@ -53,4 +66,4 @@ case "$choice" in
 done
 }
 
-
+main_loop
