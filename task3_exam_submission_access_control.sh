@@ -50,7 +50,7 @@ echo "path: $file_path"
 echo "size: $file_size"
 echo "extension: $file_extension"
 
-if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
+if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then 
 
 	if [[ "$file_size" -lt $((5 * (1024 * 1024))) ]]; then
 
@@ -163,6 +163,17 @@ done
 main_loop(){
 echo "Welcome to the secure examination and access control system!"
 echo
+local -a all_files=()
+
+# Create submission log with heading if its not already made, or doesn't have a heading
+if [ -f "submission_log.txt" ]; then
+	if ! [ -s "submission_log.txt" ]; then
+		printf "%-30s%-20s%-20s%-30s" "Timestamp" "Type" "Student ID" "Filename" >> "submission_log.txt"
+	fi
+else
+	printf "%-30s%-20s%-20s%-30s" "Timestamp" "Type" "Student ID" "Filename" > "submission_log.txt"
+fi
+
 
 while true; do 
 menu
@@ -182,6 +193,6 @@ case "$choice" in
 done
 }
 
-arr[0]="./test.pdf"
 
-submit_file ${arr[@]}
+
+main_loop
