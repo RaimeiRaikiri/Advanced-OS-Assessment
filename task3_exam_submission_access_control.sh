@@ -15,13 +15,113 @@ echo "${name##*.}"
 
 }
 
+submit_file() {
+
+all_files="$@"
+
+# Put all possible submission files in an array excluding git files
+# Including files in subdirectories
+mapfile -t files < <(find . -type f ! -path "./.git/*")
+
+while true; do
+	# Print the submission options and ask for the user choice
+	itr=$(print_numbered_list "${files[@]}")
+	echo
+	read -r -p "Select a file to upload from this directory (from the numbered list): " choice
+	
+	if [[ "$choice" -gt 0 ]] && [[ "$choice" -le "$itr" ]]; then
+		break
+	else
+		# If the user doesn't input a valid choice
+		echo
+		echo "You have not selected a valid file from the list, try again (numbers 1 - $itr)"
+		echo
+		continue
+	fi
+
+done
+
+let file_option=$(($choice - 1))
+file_path="${files[$file_option]}"
+file_size=$(wc -c < "$file_path")
+file_extension=$(get_file_extension "$file_path")
+
+echo "path: $file_path"
+echo "size: $file_size"
+echo "extension: $file_extension"
+
+if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
+
+	if [[ "$file_size" -lt $((5 * (1024 * 1024))) ]]; then
+
+		identical_filepath=false
+		for file in "$all_files"; do
+
+			if [[ "$file_path" == "$file" ]]; then
+				identical_filepath=true
+				break
+			fi
+		done
+ 
+		if [[ "$identical_filepath" == false ]]; then
+
+			declare -a identical_filesizes=()
+			for file in "$all_files"; do
+
+				if [[ "$file_size" != $(wc -c < "$file") ]]; then
+					continue
+				else
+					identical_filesize+=("$file")
+					continue
+				fi
+			done
+			
+			if [ ${#identical_filesize[@]} -eq 0]; then
+				log_event "" "$file_path" "Submission"
+				echo "$file_path"
+			else
+				identical_file=false
+				for file in "${identical_filesize[@]}"; do
+
+					if cmp -s "$filepath" "$file"; then
+						identical_file=true
+						break
+					fi
+				done
+				if [ identical_file == true ]; then
+					log_event "" "$file_path" "Submission")
+					echo "$file_path"
+				else
+					echo <&2
+					echo "This files content is identical to another that has been previously submitted, and therefore cannot be accpeted!" <&2
+					echo <&2
+				fi
+			fi
+		else
+			echo <&2
+			echo "This filepath is identical to another previously submitted and thereore cannot be accepted!" <&2
+			echo <&2
+		fi
+	else
+		echo <&2
+		echo "This file is larger than 5 mb and therefore cannot be accepted!" <&2
+		echo <&2
+	fi
+else
+	echo <&2
+	echo "This file is not a pdf or docx and therefore cannot be accepted!" <&2
+	echo <&2
+fi 
+
+}
+
 print_numbered_list(){
 itr=0
 
 for item in "$@"; do
 	((itr++)) 
-	
-	echo "$itr - $item"
+	# Sending the printed output to stderr so that the itr does not get printed
+	echo "$itr - $item" >&2
 done
 
 echo "$itr"
@@ -66,4 +166,6 @@ case "$choice" in
 done
 }
 
-main_loop
+arr[0]="./test.pdf"
+
+submit_file ${arr[@]}
