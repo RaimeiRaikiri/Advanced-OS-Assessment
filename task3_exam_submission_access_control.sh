@@ -34,9 +34,9 @@ while true; do
 		break
 	else
 		# If the user doesn't input a valid choice
-		echo
-		echo "You have not selected a valid file from the list, try again (numbers 1 - $itr)"
-		echo
+		echo >&2
+		echo "You have not selected a valid file from the list, try again (numbers 1 - $itr)" >&2
+		echo >&2
 		continue
 	fi
 
@@ -46,9 +46,9 @@ local file_path="${files[(($choice -1))]}"
 local file_size=$(wc -c < "$file_path")
 local file_extension=$(get_file_extension "$file_path")
 
-echo "path: $file_path"
-echo "size: $file_size"
-echo "extension: $file_extension"
+echo "path: $file_path" >&2
+echo "size: $file_size" >&2
+echo "extension: $file_extension" >&2
 
 if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then 
 
@@ -92,25 +92,25 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 					log_event "" "$file_path" "Submission"
 					echo "$file_path"
 				else
-					echo <&2
-					echo "This files content is identical to another that has been previously submitted, and therefore cannot be accpeted!" <&2
-					echo <&2
+					echo >&2
+					echo "This files content is identical to another that has been previously submitted, and therefore cannot be accpeted!" >&2
+					echo >&2
 				fi
 			fi
 		else
-			echo <&2
-			echo "This filepath is identical to another previously submitted and thereore cannot be accepted!" <&2
-			echo <&2
+			echo >&2
+			echo "This filepath is identical to another previously submitted and thereore cannot be accepted!" >&2
+			echo >&2
 		fi
 	else
-		echo <&2
-		echo "This file is larger than 5 mb and therefore cannot be accepted!" <&2
-		echo <&2
+		echo >&2
+		echo "This file is larger than 5 mb and therefore cannot be accepted!" >&2
+		echo >&2
 	fi
 else
-	echo <&2
-	echo "This file is not a pdf or docx and therefore cannot be accepted!" <&2
-	echo <&2
+	echo >&2
+	echo "This file is not a pdf or docx and therefore cannot be accepted!" >&2
+	echo >&2
 fi 
 
 }
@@ -143,6 +143,8 @@ log_event() {
 		printf "\n" >> "submission_log.txt" 
 	fi
 }
+
+
 exit_system(){
 while true; do
 
@@ -193,6 +195,3 @@ case "$choice" in
 done
 }
 
-
-
-main_loop
