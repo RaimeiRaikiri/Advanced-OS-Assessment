@@ -12,23 +12,23 @@ def menu():
         print()
 
 def submit_file(all_files):
-	# Get all files in the current directory, including files in subdirectories. 
+	# Get all fileexs in the current directory, including files in subdirectories. 
 	available_submission_files = get_list_of_all_files(".")
 
 	while True:
 		itr = print_numbered_list(available_submission_files)
-		print()
-		choice = input("Select a file to upload from this directory: ")
+			print()
+			choice = input("Select a file to upload from this directory: ")
 
-		try :
-			# If the user inputs a valid choice proceed
-			if int(choice) > 0 and int(choice) <= itr:
-				break
-			else:
-				print()
-				print(f"You have not selected a valid file, try again (numbers 1 - {itr})!")
-				print()
-				continue
+			try :
+				# If the user inputs a valid choice proceed
+				if int(choice) > 0 and int(choice) <= itr:
+					break
+				else:
+					print()
+					print(f"You have not selected a valid file, try again (numbers 1 - {itr})!")
+					print()
+					continue
 		except:
 			print()
 			print(f"You have not even entered a number, try again!")
@@ -236,6 +236,10 @@ def main():
 				if file_submitted:
 					print()
 					print(f"File {file} submitted previously!")
+					print()
+				else:
+					print()
+					print("This file has not been submitted previously!")
 					print()
 			case 3:
 				pass
