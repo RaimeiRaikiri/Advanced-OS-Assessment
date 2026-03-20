@@ -140,10 +140,20 @@ log_event() {
 			fi
 		done
 		
-		printf "\n" >> "submission_log.txt" 
+		printf $"\n" >> "submission_log.txt" 
 	fi
 }
 
+check_submitted_files() {
+local itr=0
+local arr
+while IFS= read -r line; do
+if [ "$itr" -ge 1 ]; then
+	echo
+fi
+((itr++))
+done < "submission_log.txt."
+}
 
 exit_system(){
 while true; do
@@ -165,16 +175,32 @@ done
 main_loop(){
 echo "Welcome to the secure examination and access control system!"
 echo
-local -a all_files=()
 
 # Create submission log with heading if its not already made, or doesn't have a heading
 if [ -f "submission_log.txt" ]; then
 	if ! [ -s "submission_log.txt" ]; then
-		printf "%-30s%-20s%-20s%-30s" "Timestamp" "Type" "Student ID" "Filename" >> "submission_log.txt"
+		printf "%-30s%-20s%-20s%-30s\n" "Timestamp" "Type" "Student ID" "Filename" >> "submission_log.txt"
 	fi
 else
-	printf "%-30s%-20s%-20s%-30s" "Timestamp" "Type" "Student ID" "Filename" > "submission_log.txt"
+	printf "%-30s%-20s%-20s%-30s\n" "Timestamp" "Type" "Student ID" "Filename" > "submission_log.txt"
 fi
+
+# Read submission log and put all submitted files into array for future checks
+local -a all_files=()
+local itr=0
+
+
+while IFS= read -r line; do
+if [ "$itr" -ge 1 ]; then
+	IFS=' '
+	read -a arr <<< "$line"
+	if [ ${#arr[@]} == 4 ]; then
+		all_files+=(${arr[3]})
+	fi
+fi
+
+((itr++))
+done < "submission_log.txt"
 
 
 while true; do 
@@ -184,8 +210,10 @@ read -r -p "Select choice: " choice
 echo
 case "$choice" in
 
-	1) ;;
-	2) ;;
+	1) all_files+=$(submit_file ${all_files[@]}) ;;
+	2) for e in ${all_files[@]}; do
+		echo "from all files: $e"
+done;;
 	3) ;;
 	4) ;;
 	5) exit_system ;;
@@ -194,4 +222,6 @@ case "$choice" in
 	echo
 done
 }
+
+main_loop
 
