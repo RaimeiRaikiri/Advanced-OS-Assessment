@@ -17,7 +17,7 @@ echo "${name##*.}"
 
 submit_file() {
 
-local all_files="$@"
+local -a all_files=("$@")
 local files=()
 
 # Put all possible submission files in an array excluding git files
@@ -66,15 +66,17 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 		if [[ "$identical_filepath" == false ]]; then
 
 			local -a identical_filesizes=()
-			for file in "$all_files"; do
-
-				if [[ "$file_size" != $(wc -c < "$file") ]]; then
-					continue
-				else
-					identical_filesize+=("$file")
-					continue
-				fi
-			done
+			if [ ${#all_files[@]} -ge 1 ]; then
+				for file in "$all_files"; do
+					echo "$file"
+					if [[ "$file_size" != $(wc -c < "$file") ]]; then
+						continue
+					else
+						identical_filesize+=("$file")
+						continue
+					fi
+				done
+			fi
 			
 			if [[ ${#identical_filesize[@]} -eq 0 ]]; then
 				log_event "" "$file_path" "Submission"
@@ -202,6 +204,9 @@ fi
 ((itr++))
 done < "submission_log.txt"
 
+for a in ${all_files[@]}; do
+	echo "before submission $a"
+done
 
 while true; do 
 menu
