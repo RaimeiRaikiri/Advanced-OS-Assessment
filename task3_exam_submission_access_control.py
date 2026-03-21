@@ -17,18 +17,18 @@ def submit_file(all_files):
 
 	while True:
 		itr = print_numbered_list(available_submission_files)
-			print()
-			choice = input("Select a file to upload from this directory: ")
+		print()
+		choice = input("Select a file to upload from this directory: ")
 
-			try :
-				# If the user inputs a valid choice proceed
-				if int(choice) > 0 and int(choice) <= itr:
-					break
-				else:
-					print()
-					print(f"You have not selected a valid file, try again (numbers 1 - {itr})!")
-					print()
-					continue
+		try :
+			# If the user inputs a valid choice proceed
+			if int(choice) > 0 and int(choice) <= itr:
+				break
+			else:
+				print()
+				print(f"You have not selected a valid file, try again (numbers 1 - {itr})!")
+				print()
+				continue
 		except:
 			print()
 			print(f"You have not even entered a number, try again!")
@@ -60,7 +60,7 @@ def submit_file(all_files):
 				"""
 				identical_filesizes = []
 				for file in all_files:
-					if file_size != get_file_size(file):
+					if file_size != get_filesize(file):
 						continue
 					else:
 						identical_filesizes.append(file)
@@ -69,6 +69,9 @@ def submit_file(all_files):
 				if not identical_filesizes:
 					# If the file sizes arent identical, its not the same file so submit
 					log_event(["", filename], "Submission")
+					print()
+					print("File successfully submitted")
+					print()
 					return filename
 				else:
 					# Inspect all identical sized files line by line to compare content
@@ -90,6 +93,10 @@ def submit_file(all_files):
 
 					if not identical_file:
 						log_event(["", filename], "Submission")
+						print()
+						print("File successfully submitted")
+						print()
+
 						return filename
 
 					else:
@@ -116,10 +123,19 @@ def check_file_submitted(all_files):
 			if file == filepath:
 				return True, file
 
-			return False, filepath
+		return False, filepath
 
 	else:
 		return False, filepath
+
+def list_all_submissions(all_files):
+	print("All previous submissions: ")
+	print()
+		
+	for file in all_files:
+		print(file)
+
+	print()
 
 def get_file_extension(filename):
 
@@ -242,7 +258,7 @@ def main():
 					print("This file has not been submitted previously!")
 					print()
 			case 3:
-				pass
+				list_all_submissions(all_files)
 			case 4:
 				pass
 			case 5:
