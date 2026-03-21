@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-LOG_DIR="./Archive_logs"
+LOG_DIR="./ArchiveLogs"
 LOG_FILE="./system_monitor_log.txt"
 
 # Using MiB and GiB as dealing with memory
@@ -94,9 +94,11 @@ fi
 check_log_size(){
 local current_size=$(stat -c %s "$LOG_FILE")
 if [ "$current_size" -ge "$FILE_SIZE_LIMIT" ]; then
-	mv "$LOG_FILE" "$LOG_DIR/ArchivedLog_$(date '+%Y-%m-%d %H:%M:%S')"
-	echo "Log file moved to archives as it exceeds the size limit"
+	$(gzip "$LOG_FILE")
+	local archive_log="$LOG_FILE.gz"
+	mv "$archive_log" "$LOG_DIR/ArchivedLog_$(date '+%Y-%m-%d %H:%M:%S')"
 	echo
+	echo "Log file moved to archives as it exceeds the size limit"
 	log_event "LOG current log file exceeds 50mb so is being moved to archives"
 fi
 }
