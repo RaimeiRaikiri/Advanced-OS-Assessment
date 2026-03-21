@@ -15,6 +15,21 @@ echo "${name##*.}"
 
 }
 
+check_file_submitted(){
+read -r -p "Enter full file path relative to current directory: " path
+local arr=("$@")
+
+if [ -n "$path" ]; then
+	for element in ${arr[@]}; do
+		if [ "$element" == "$path" ]; then
+			echo "$path"
+		else
+			echo ""
+		fi
+	done
+fi
+}
+
 submit_file() {
 
 local -a all_files=("$@")
@@ -146,17 +161,6 @@ log_event() {
 	fi
 }
 
-check_submitted_files() {
-local itr=0
-local arr
-while IFS= read -r line; do
-if [ "$itr" -ge 1 ]; then
-	echo
-fi
-((itr++))
-done < "submission_log.txt."
-}
-
 exit_system(){
 while true; do
 
@@ -204,10 +208,6 @@ fi
 ((itr++))
 done < "submission_log.txt"
 
-for a in ${all_files[@]}; do
-	echo "before submission $a"
-done
-
 while true; do 
 menu
 
@@ -216,9 +216,16 @@ echo
 case "$choice" in
 
 	1) all_files+=$(submit_file ${all_files[@]}) ;;
-	2) for e in ${all_files[@]}; do
-		echo "from all files: $e"
-done;;
+	2) local file_submitted=$(check_file_submitted ${all_files[@]})
+		if [ -n "$file_submitted" ]; then
+			echo 
+			echo "File $file_submitted submitted previously!"
+			echo
+		else
+			echo
+			echo "This file has not been submitted previously!"
+			echo
+		fi ;;
 	3) ;;
 	4) ;;
 	5) exit_system ;;
