@@ -2,12 +2,15 @@
 
 LOG_DIR="./Archive_logs"
 LOG_FILE="./system_monitor_log.txt"
-FILE_SIZE_LIMIT=50000000
-DIR_SIZE_LIMIT=1000000000
+
+# Using MiB and GiB as dealing with memory
+FILE_SIZE_LIMIT=$((50 * 1024 * 1024))
+DIR_SIZE_LIMIT=$((1024 * 1024 * 1024))
 
 log_event(){
 local msg="$1"
 printf "%s %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$msg" >> "$LOG_FILE"
+check_log_size
 }
 
 print_main_menu(){
@@ -29,6 +32,7 @@ log_event "MEMORY top 10 memory consuming processes listed successfully"
 
 terminate_processes(){
 read -r -p "Select process to elimainate (enter PID): " pid
+# To dev null so it prints what I dictate
 if ! ps -p "$pid" > /dev/null; then
 	log_event "PROCESS process to terminate not found"
 	echo "PID $pid does not exist."
@@ -37,7 +41,7 @@ fi
 
 while true; do
 
-	read -r -p "Are you sure you want to terminate process of PID $pid > (Enter Y to confirm, N to deny): " confirm
+	read -r -p "Are you sure you want to terminate process of PID $pid (Enter Y to confirm, N to deny): " confirm
 	if  [[ "$confirm" == "Y" ]] || [[ "$confirm" == "y" ]]; then
 
 		if [ $(ps -o ppid= "$pid") == 1 ] ; then
@@ -69,29 +73,52 @@ done
 create_archive_directory() {
 if [ ! -d "$LOG_DIR" ]; then
 	mkdir "$LOG_DIR"
-
 	echo "Archive directory created as it didn't exist"
+	echo
 	log_event "ARCHIVE archive directory created because one didn't exist"
-	check_archive_directory
 fi
+
+check_archive_directory
 }
 
 check_archive_directory(){
 if [ -d "$LOG_DIR" ]; then
-	if [ "$( du  -b "$LOG_DIR" | cut -f1)" -gt "$DIR_SIZE_LIMIT" ] ; then
-		echo "Archive folder exceeds 1GB"
+	if [ "$( du  -b $LOG_DIR | cut -f1)" -gt "$DIR_SIZE_LIMIT" ] ; then
+		echo "Archive folder exceeds 1GB, please clear some space!" >&2
+		echo
 		log_event "ARCHIVE archive folder exceeds 1GB"
 	fi
 fi
 }
 
 check_log_size(){
-echo "$(stat -c %s $LOG_FILE)"
-
-if [ $"(stat -c %s $LOG_FILE)" > "$FILE_SIZE_LIMIT" ]; then
+local current_size=$(stat -c %s "$LOG_FILE")
+if [ "$current_size" -ge "$FILE_SIZE_LIMIT" ]; then
 	mv "$LOG_FILE" "$LOG_DIR/ArchivedLog_$(date '+%Y-%m-%d %H:%M:%S')"
+	echo "Log file moved to archives as it exceeds the size limit"
+	echo
 	log_event "LOG current log file exceeds 50mb so is being moved to archives"
 fi
+}
+
+inspect_disk_usage() {
+
+while true; do
+	read -r -p "Enter target directory path, relative to current directory: " path
+
+	if [ -d "$path" ]; then
+		# Cut to prevent path from being included in output to local variable
+		local size=$(du -s "$path" | cut -f1)
+		echo "Total size in bytes: $size"
+		log_event "DISK INSPECT successfully inspect the disk usage of path $path"
+		break
+	else
+		echo "Not a valid path to a directory, try again!"
+		echo
+		continue
+	fi
+
+done
 }
 
 exit_system(){
@@ -130,7 +157,7 @@ case "$choice" in
 	1) top && log_event "MEMORY CPU display cpu and memory successfully";;
 	2) list_top10_memory ;;
 	3) terminate_processes;;
-	4) ;;
+	4) inspect_disk_usage;;
 	5) exit_system ;;
 	*) echo "Invalid choice" ;;
 	esac
