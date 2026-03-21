@@ -42,7 +42,7 @@ mapfile -t files < <(find . -type f ! -path "./.git/*")
 while true; do
 	# Print the submission options and ask for the user choice
 	local itr=$(print_numbered_list "${files[@]}")
-	echo
+	echo >&2
 	read -r -p "Select a file to upload from this directory (from the numbered list): " choice
 	
 	if [[ "$choice" -gt 0 ]] && [[ "$choice" -le "$itr" ]]; then
@@ -61,9 +61,6 @@ local file_path="${files[(($choice -1))]}"
 local file_size=$(wc -c < "$file_path")
 local file_extension=$(get_file_extension "$file_path")
 
-echo "path: $file_path" >&2
-echo "size: $file_size" >&2
-echo "extension: $file_extension" >&2
 
 if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then 
 
@@ -83,7 +80,6 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 			local -a identical_filesizes=()
 			if [ ${#all_files[@]} -ge 1 ]; then
 				for file in "$all_files"; do
-					echo "$file"
 					if [[ "$file_size" != $(wc -c < "$file") ]]; then
 						continue
 					else
@@ -95,6 +91,9 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 			
 			if [[ ${#identical_filesize[@]} -eq 0 ]]; then
 				log_event "" "$file_path" "Submission"
+				echo >&2
+				echo "File submitted successfully!" >&2
+			
 				echo "$file_path"
 			else
 				local identical_file=false
@@ -107,27 +106,26 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 				done
 				if [ identical_file == true ]; then
 					log_event "" "$file_path" "Submission"
+					echo >&2
+					echo "File submitted successfully!" >&2
+					
 					echo "$file_path"
 				else
 					echo >&2
 					echo "This files content is identical to another that has been previously submitted, and therefore cannot be accpeted!" >&2
-					echo >&2
 				fi
 			fi
 		else
 			echo >&2
 			echo "This filepath is identical to another previously submitted and thereore cannot be accepted!" >&2
-			echo >&2
 		fi
 	else
 		echo >&2
 		echo "This file is larger than 5 mb and therefore cannot be accepted!" >&2
-		echo >&2
 	fi
 else
 	echo >&2
 	echo "This file is not a pdf or docx and therefore cannot be accepted!" >&2
-	echo >&2
 fi 
 
 }
@@ -215,18 +213,30 @@ read -r -p "Select choice: " choice
 echo
 case "$choice" in
 
-	1) all_files+=$(submit_file ${all_files[@]}) ;;
-	2) local file_submitted=$(check_file_submitted ${all_files[@]})
+	1) 
+		local temp=$(submit_file ${all_files[@]})
+		all_files+=("$temp") ;;
+	2) 
+		local file_submitted=$(check_file_submitted ${all_files[@]})
 		if [ -n "$file_submitted" ]; then
-			echo 
-			echo "File $file_submitted submitted previously!"
 			echo
+			echo "File $file_submitted submitted previously!"
 		else
 			echo
 			echo "This file has not been submitted previously!"
-			echo
 		fi ;;
-	3) ;;
+	3) 
+		if [ ${#all_files[@]} == 0 ]; then
+			echo "No submissions yet!"
+		else
+			echo "All previous submissions: "
+			echo
+		
+			for file in ${all_files[@]}; do
+				echo "$file"
+			done 
+		fi
+		;;
 	4) ;;
 	5) exit_system ;;
 	*) echo "Invalid choice" ;;
