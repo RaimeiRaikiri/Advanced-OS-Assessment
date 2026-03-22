@@ -282,8 +282,8 @@ def login(all_logins):
 
 def create_new_login():
 	print()
-	new_username = input("Enter new username (minimum length 6 chars): ")
-	new_password = input("Enter new password (minimum length 8 chars): ")
+	new_username = input("Enter new username (minimum length 6 chars, whitespace is removed): ").replace(" ", "")
+	new_password = input("Enter new password (minimum length 8 chars, whitespace is removed): ").replace(" ", "")
 
 	# Username of at least 6 chars and password of at least 8
 	if len(new_username) > 5:
