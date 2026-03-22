@@ -1,17 +1,26 @@
-import os, datetime
+import os, datetime, time
 
 
 heading = f"{'Timestamp':<30}{'Type':<20}{'Student ID':<20}{'Filename':<30}\n"
 
-def menu():
-        print("1 Submit an assignment")
-        print("2 Check if a file has been submitted")
-        print("3 List all submitted assignments")
-        print("4 Simulate login attempt")
-        print("5 Exit system")
-        print()
+def menu(logged_in):
+	if logged_in == True:
+		print("1 Submit an assignment")
+		print("2 Check if a file has been submitted")
+		print("3 List all submitted assignments")
+		print("4 Simulate login attempt")
+		print("5 Sign out")
+		print("6 Exit system")
+		print()
+	else: 
+		print("1 Submit an assignment")
+		print("2 Check if a file has been submitted")
+		print("3 List all submitted assignments")
+		print("4 Simulate login attempt")
+		print("5 Exit system")
+		print()
 
-def submit_file(all_files):
+def submit_file(all_files, current_student_id):
 	# Get all fileexs in the current directory, including files in subdirectories. 
 	available_submission_files = get_list_of_all_files(".")
 
@@ -60,6 +69,7 @@ def submit_file(all_files):
 				"""
 				identical_filesizes = []
 				for file in all_files:
+					
 					if file_size != get_filesize(file):
 						continue
 					else:
@@ -68,7 +78,7 @@ def submit_file(all_files):
 
 				if not identical_filesizes:
 					# If the file sizes arent identical, its not the same file so submit
-					log_event(["", filename], "Submission")
+					log_event([current_student_id, filename], "Submission")
 					print()
 					print("File successfully submitted")
 					print()
@@ -92,7 +102,7 @@ def submit_file(all_files):
                                                 	break
 
 					if not identical_file:
-						log_event(["", filename], "Submission")
+						log_event([current_student_id, filename], "Submission")
 						print()
 						print("File successfully submitted")
 						print()
@@ -171,6 +181,125 @@ def print_numbered_list(values):
 
 	return itr
 
+def get_logins():
+	logins = {}
+
+	with open("login_details.txt", "a+") as login_file:
+		login_file.seek(0)
+		for line in login_file.readlines():
+			split_line = line.strip().split(":")
+
+			logins[split_line[0]] = [split_line[1], split_line[2]]
+
+	return logins
+
+def login(all_logins):
+	# You have to creeate a new login if there is none already
+	if all_logins == {}:
+		new_login = None
+
+		while new_login == None:
+			new_login = create_new_login()
+
+		return new_login[0], new_login[1], new_login[2]
+	# Option to create new login
+	choice = input("Enter Y to create new login: ")
+
+	if choice.capitalize() == "Y":
+		print()
+		print("You have chosen to create a new login")
+		new_login = None
+
+		while new_login == None:
+			new_login = create_new_login()
+
+		return new_login[0], new_login[1], new_login[2]
+	else:
+		print()
+		print("You have chosen to login to an existing account")
+		username = input("Enter username: ")
+
+		if check_account_locked(all_logins, username):
+			print()
+			# Editing the login_detail.txt file, find the username and edit the True to False to unlock
+			print(f"Account -{username}- LOCKED! Administrator required to edit files to unlock!")
+			print()
+
+			return None
+
+		# 3 Attempts to get password correct
+		fail_times = []
+		start = time.time()
+		fail_times.append(start)
+
+		for x in range(1,4):
+			password = input("Enter password: ")
+			
+			if password == all_logins[username][0]:
+				# Only keep times that were within 60 seconds and flags suspicous if too many within 60s
+				fail_times= [t for t in fail_times if start - t <=60]
+				if len(fail_times) >= 3:
+					print()
+					print("Suspicious activity detected! Repeated login attempts within 60s")
+
+				# Return false as it is not a new login
+				return username, password, False
+			else:
+				print()
+				print(f"Incorrect password you have {3-x} attempts remaining to try again!")
+				print()
+				fail_times.append(time.time())
+		
+		fail_times = [t for t in fail_times if start - t <=60]
+		if len(fail_times) >= 3:
+			print()
+			print("Suspicious activity detected! Repeated login attempts within 60s")
+
+		print()
+		print(f"Account with the username -{username}- has been locked due to 3 incorrect password entries")
+		print()
+
+		with open("login_details.txt", "r") as login_file:
+			lines = login_file.readlines()
+
+		index = list(all_logins.keys()).index(username)
+		lines[index] = f"{username}:{all_logins[username][0]}:True \n" # Just change the ending of this entry to lock account
+
+		with open("login_details.txt", "w") as login_file:
+			login_file.writelines(lines)
+
+		return username, "", False
+
+def create_new_login():
+	print()
+	new_username = input("Enter new username (minimum length 6 chars): ")
+	new_password = input("Enter new password (minimum length 8 chars): ")
+
+	# Username of at least 6 chars and password of at least 8
+	if len(new_username) > 5:
+		if len(new_password) > 7:
+			# Return true if its a new login
+			return new_username, new_password, True
+		else:
+			print()
+			print("Password is too short, try again!")
+			print()
+
+			return None
+	print()
+	print("Username is too short, try again!")
+	print()
+
+	return None
+
+def check_account_locked(all_logins, username):
+	if all_logins:
+		locked = all_logins[username][1]
+		if locked.lower()  ==  "true":
+			return True
+		else:
+			return False
+
 def log_event(values, type):
 	"""
 	Log events in the desired format, to the submission log 
@@ -187,7 +316,7 @@ def log_event(values, type):
 				else:
 					submission_file.write(f"{'':<20}")
 			except:
-				submission_file.write(f"{'':<20}")
+		 		submission_file.write(f"{'':<20}")
 		submission_file.write("\n")
 
 def exit_system():
@@ -211,6 +340,12 @@ def main():
 	print()
 
 	all_files = []
+	# Get all logins at the start
+	all_logins = get_logins()
+	print(all_logins)
+
+	current_student_id = ""
+	logged_in = False
 
 	# Create the log file if it doesn't exist
 	with open("submission_log.txt", "a+") as submission_file:
@@ -229,21 +364,30 @@ def main():
 		for line in submission_file.readlines():
 			values = line.split()
 			try:
-				if values[3]:  # Always 4th item of values due to submission log structure
-					all_files.append(values[3])
+				if values[2] == "Submission":
+					# Always last item of values due to submission log structure
+					all_files.append(values[-1])
 			except:
 				# Do nothing
 				# Exception should only occur when there is no filename, and therefore no need to add a file
 				pass
 
 	while True:
-		menu()
+		if logged_in:
+			user = list(all_logins.keys())[current_student_id - 1]
+			print("-" * 20)
+			print()
+			print(f"Logged in as -{user}- with Student ID NO. {current_student_id}")
+			print()
+		print("-" * 20)
+		print()
+		menu(logged_in)
 		choice = input("Select your choice from the menu: ")
 		print()
 
 		match int(choice):
 			case 1:
-				filename = submit_file(all_files)
+				filename = submit_file(all_files, current_student_id)
 				if filename:
 					all_files.append(filename)
 			case 2:
@@ -251,7 +395,7 @@ def main():
 
 				if file_submitted:
 					print()
-					print(f"File {file} submitted previously!")
+					print(f"File {file} was submitted previously!")
 					print()
 				else:
 					print()
@@ -260,9 +404,61 @@ def main():
 			case 3:
 				list_all_submissions(all_files)
 			case 4:
-				pass
+				login_details = login(all_logins)
+
+
+				if login_details:
+
+					if login_details[2]:
+						with open("login_details.txt", "a") as login_file:
+							# Store new login in file
+							login_file.write(f"{login_details[0]}:{login_details[1]}:False")
+							login_file.write("\n")
+
+						all_logins[login_details[0]] = [login_details[1], False]
+						print()
+						print("New login details saved!")
+
+						# Log in
+						current_student_id = len(all_logins.keys())
+						logged_in = True
+
+						print(f"Student id = {current_student_id}")
+						print()
+
+					else:
+						if login_details[1] == "":
+							all_logins[login_details[0]][1] = True
+							# Sign out
+							logged_in = False
+							current_student_id = ""
+
+						else:
+							print()
+							print(f"Login successful, Hello {login_details[0]}!")
+
+							logged_in = True
+							current_student_id = list(all_logins.keys()).index(login_details[0]) + 1
+
+							print(f"Student id = {current_student_id}")
+							print()
+
 			case 5:
-				exit_system()
+				if logged_in:
+					# Sign out functionality
+					logged_in = False
+					current_student_id = ""
+				else:
+					exit_system()
+			case 6:
+				if logged_in:
+					exit_system()
+				else:
+					print("Invalid choice")
+			case _:
+				print("Invalid choice")
+			
+
 
 main()
 
