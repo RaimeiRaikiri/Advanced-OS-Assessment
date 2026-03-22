@@ -245,7 +245,7 @@ def login(all_logins):
 				if len(fail_times) >= 3:
 					print()
 					print("Suspicious activity detected! Repeated login attempts within 60s")
-					log_event(["", ""], "Suspicous Login Activity")
+					log_event(["", ""], "Suspicous Activity")
 
 				# Return false as it is not a new login
 				return username, password, False
@@ -261,7 +261,7 @@ def login(all_logins):
 		if len(fail_times) >= 3:
 			print()
 			print("Suspicious activity detected! Repeated login attempts within 60s")
-			log_event(["",""], "Suspicous Login Activity")
+			log_event(["",""], "Suspicous Activity")
 
 		print()
 		print(f"Account with the username -{username}- has been locked due to 3 incorrect password entries")
