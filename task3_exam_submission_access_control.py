@@ -218,13 +218,17 @@ def login(all_logins):
 		print()
 		print("You have chosen to login to an existing account")
 		username = input("Enter username: ")
+		locked = check_account_locked(all_logins, username)
 
-		if check_account_locked(all_logins, username):
+		if locked == True:
 			print()
 			# Editing the login_detail.txt file, find the username and edit the True to False to unlock
 			print(f"Account -{username}- LOCKED! Administrator required to edit files to unlock!")
 			print()
 
+			return None
+
+		elif locked == None:
 			return None
 
 		# 3 Attempts to get password correct
@@ -241,6 +245,7 @@ def login(all_logins):
 				if len(fail_times) >= 3:
 					print()
 					print("Suspicious activity detected! Repeated login attempts within 60s")
+					log_event(["", ""], "Suspicous Login Activity")
 
 				# Return false as it is not a new login
 				return username, password, False
@@ -248,16 +253,21 @@ def login(all_logins):
 				print()
 				print(f"Incorrect password you have {3-x} attempts remaining to try again!")
 				print()
+
 				fail_times.append(time.time())
+				log_event(["", ""], "Login:Fail")
 		
 		fail_times = [t for t in fail_times if start - t <=60]
 		if len(fail_times) >= 3:
 			print()
 			print("Suspicious activity detected! Repeated login attempts within 60s")
+			log_event(["",""], "Suspicous Login Activity")
 
 		print()
 		print(f"Account with the username -{username}- has been locked due to 3 incorrect password entries")
 		print()
+
+		log_event(["", ""], "Account Locked")
 
 		with open("login_details.txt", "r") as login_file:
 			lines = login_file.readlines()
@@ -294,7 +304,16 @@ def create_new_login():
 
 def check_account_locked(all_logins, username):
 	if all_logins:
-		locked = all_logins[username][1]
+		try:
+			locked = all_logins[username][1]
+
+		except:
+			print()
+			print("Username does not exist!")
+			print()
+
+			return None
+
 		if locked.lower()  ==  "true":
 			return True
 		else:
@@ -342,7 +361,6 @@ def main():
 	all_files = []
 	# Get all logins at the start
 	all_logins = get_logins()
-	print(all_logins)
 
 	current_student_id = ""
 	logged_in = False
@@ -384,8 +402,13 @@ def main():
 		menu(logged_in)
 		choice = input("Select your choice from the menu: ")
 		print()
+		try:
+			choice = int(choice)
+		except:
+			print("Invalid choice")
+			continue
 
-		match int(choice):
+		match choice:
 			case 1:
 				filename = submit_file(all_files, current_student_id)
 				if filename:
@@ -415,7 +438,7 @@ def main():
 							login_file.write(f"{login_details[0]}:{login_details[1]}:False")
 							login_file.write("\n")
 
-						all_logins[login_details[0]] = [login_details[1], False]
+						all_logins[login_details[0]] = [login_details[1], "False"]
 						print()
 						print("New login details saved!")
 
@@ -425,6 +448,8 @@ def main():
 
 						print(f"Student id = {current_student_id}")
 						print()
+
+						log_event([current_student_id, ""], "Sign Up")
 
 					else:
 						if login_details[1] == "":
@@ -443,6 +468,7 @@ def main():
 							print(f"Student id = {current_student_id}")
 							print()
 
+							log_event([current_student_id, ""], "Login:Success")
 			case 5:
 				if logged_in:
 					# Sign out functionality
