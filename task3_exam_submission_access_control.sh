@@ -32,11 +32,10 @@ read -r -p "Enter full file path relative to current directory: " path
 local arr=("$@")
 
 if [ -n "$path" ]; then
-	for element in ${arr[@]}; do
+	for element in "${arr[@]}"; do
 		if [ "$element" == "$path" ]; then
 			echo "$path"
-		else
-			echo ""
+			return
 		fi
 	done
 fi
@@ -184,13 +183,23 @@ get_logins() {
 }
 
 login() {
-local declare -n all_logins=$1
+local -a all_files=()
+local logins=$(get_logins)
+
+for log in ${logins[@]}; do
+	IFS=":" read -r user value <<< "$log"
+	all_logins["$user"]="$value"
+done
+
+
 
 if [ ${#all_logins[@]} == 0 ]; then
 	while true ; do
 		create_new_login
-		if [ ${#Gusername} -gt 0 ]; then
-			echo "$Gusername $Gpassword $Gnew"
+		if [ ${#Gusername} -gt 0 ] && [ ${#Gpassword} -gt 0 ] && [ ${#Gnew} -gt 0 ]; then
+			echo "$Gusername"
+			echo "$Gpassword"
+			echo "$Gnew"
 			return
 		fi
 	done
@@ -218,7 +227,7 @@ else
 
 	read -r -p "Enter username: " username
 
-	local locked=$(check_account_locked "$username" ${all_logins[@]})
+	local locked=$(check_account_locked ${all_logins[$username]} )
 	echo "locked: $locked" >&2
 	
 	if [[ "$locked" == "true" ]]; then
@@ -232,27 +241,31 @@ else
 		echo ""
 		return
 	elif [[ "$locked" == "false" ]]; then
+
 		echo "Throough false locked"
-		read -ra arr <<< "${all_logins[username]}"
+		IFS=":" read -ra arr <<< "${all_logins[$username]}"
+
+		local stored_password="${arr[0]}"
 		local fail_times=()
-		local start=$(date +%s)
 
 		local new_times=()
-		fail_times+=("$start")
 
 		for ((i=1; i<4; i++)); do
 			read -r -p "Enter password: " password
 
-			if [ "$password" == ${arr[0]} ]; then
-				for t in ${fail_times[@]}; do
+			local current_time=$(date +%s)
+
+			if [[ "$password" == "$stored_password" ]]; then
+				
+				local fast_attempts=0
+				for t in "${fail_times[@]}"; do
 					if (( start - t -le 60 )); then
-						new_times+=("$t")
+						((fast_attempts++))
 					fi
 				done
 
-				fail_times=("${new_times[@]}")
 
-				if [ ${#fail_times[@]} -ge 3 ]; then
+				if (( fast_attempts >= 3 )); then
 					echo >&2
 					echo "Suspicious activity detected! Repeated login attempts within 60s" >&2
 
@@ -264,7 +277,7 @@ else
 				echo "Incorrect password you have $((3 - $i)) attempts remaining to try again!" >&2
 				echo >&2
 
-				fail_times+=$(date +%s)
+				fail_times+=("$current_time")
 			fi
 		done
 
@@ -341,28 +354,21 @@ fi
 }
 
 check_account_locked() {
-	local username=$1
-	local declare -n all_logins=$2
-	read -ra arr <<< "${all_logins[username]}"
-	echo ${arr[@]}
-	if [ ${#all_logins[@]} -gt 0 ]; then
-		locked=${arr[0]#*:}
-		echo "prior" >&2
-		echo "$locked" >&2
-		if [ "${locked,,}" == "true" ]; then
-			echo true
-			return
-		else
-			echo false
-			return 
-		fi
-	else
-		echo >&2
-		echo "Username does not exist!" >&2
-		echo >&2
+	local entry="$1"
 
-		echo ""
+	if [[ -z "$entry" ]]; then
+		echo "username doesnt exist" >&2
 		return
+	fi
+
+	local locked_status="${entry##*:}"
+
+	if [[ "${locked_status,,}" == "true"  ]]; then
+		echo "returned true" >&2
+		echo "true"
+	else
+		echo "returned false" >&2
+		echo "false"
 	fi
 }
 
@@ -421,8 +427,8 @@ while IFS= read -r line; do
 if [ "$itr" -ge 1 ]; then
 	IFS=' '
 	read -a arr <<< "$line"
-	if [ ${#arr[@]} == 4 ]; then
-		all_files+=(${arr[3]})
+	if [[ ${arr[2]} == "Submission" ]]; then
+		all_files+=(${arr[-1]})
 	fi
 fi
 
@@ -457,11 +463,12 @@ case "$choice" in
 	2) 
 		local file_submitted=$(check_file_submitted ${all_files[@]})
 		if [ -n "$file_submitted" ]; then
+			IFS=
 			echo
-			echo "File $file_submitted was submitted previously!"
+			printf "File %s was submitted previously!\n" "$file_submitted"
 		else
 			echo
-			echo "This file has not been submitted previously!"
+			printf "This file has not been submitted previously!"
 		fi ;;
 	3) 
 		if [ ${#all_files[@]} == 0 ]; then
