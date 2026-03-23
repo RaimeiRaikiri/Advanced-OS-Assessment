@@ -36,9 +36,11 @@ def priority_processing(job_queue_fname, job_completed_fname):
 
 		heapq.heapify(processes)
 
+		itr = 0
 		while processes:
+			itr += 1
 			priority, entry_position, name, student_id, estimated_execution_time = heapq.heappop(processes)
-			print(f"Executing job {name} given to student {student_id}, it is estimated to take  {estimated_execution_time} seconds. Priority {priority}")
+			print(f"{itr} - Executing job {name} given to student {student_id}, it is estimated to take  {estimated_execution_time} seconds. Priority {priority}")
 			values = [name, student_id, estimated_execution_time, priority]
 
 			job_complete.write(f"{values[0]:<20}{values[1]:<20}{values[2]:<30}{values[3]:<20}\n")

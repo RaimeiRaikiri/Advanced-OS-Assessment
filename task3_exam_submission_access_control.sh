@@ -173,13 +173,17 @@ log_event() {
 get_logins() {
 	local logins=()
 
-	while IFS=":" read -r username password locked; do
-		if [ ${#username} -gt 0 ]; then
-			logins+=("$username:$password:$locked")
-		fi
-	done < "login_details.txt"
+	if [[ -f "login_details.txt" ]]; then
+		while IFS=":" read -r username password locked; do
+			if [ ${#username} -gt 0 ]; then
+				logins+=("$username:$password:$locked")
+			fi
+		done < "login_details.txt"
 	
-	echo "${logins[@]}"
+		echo "${logins[@]}"
+	else
+		touch "login_details.txt"
+	fi
 }
 
 login() {
@@ -332,8 +336,6 @@ read -r -p "Enter new password (minimum length 8 chars): " Gpassword
 if [ ${#Gusername} -gt 5 ]; then
 	if [ ${#Gpassword} -gt 7 ]; then
 		Gnew="true"
-		echo "we through new login" >&2
-		echo "$Gusername $Gpassword $Gnew" >&2
 		return
 	else
 		echo >&2
