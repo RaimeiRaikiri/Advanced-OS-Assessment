@@ -101,7 +101,7 @@ def main():
 
 		menu()
 		print()
-		choice = input("Select a file to upload from this directory: ")
+		choice = input("Select choice: ")
 
 		match int(choice):
 			case 1:
