@@ -96,7 +96,7 @@ local current_size=$(stat -c %s "$LOG_FILE")
 if [ "$current_size" -ge "$FILE_SIZE_LIMIT" ]; then
 	$(gzip "$LOG_FILE")
 	local archive_log="$LOG_FILE.gz"
-	mv "$archive_log" "$LOG_DIR/ArchivedLog_$(date '+%Y-%m-%d %H:%M:%S')"
+	mv "$archive_log" "$LOG_DIR/ArchivedLog_$(date '+%Y-%m-%d %H:%M:%S').gz"
 	echo
 	echo "Log file moved to archives as it exceeds the size limit"
 	log_event "LOG current log file exceeds 50mb so is being moved to archives"
