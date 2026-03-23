@@ -191,7 +191,7 @@ for log in ${logins[@]}; do
 	all_logins["$user"]="$value"
 done
 
-
+echo ${#all_logins[@]}
 
 if [ ${#all_logins[@]} == 0 ]; then
 	while true ; do
@@ -228,7 +228,6 @@ else
 	read -r -p "Enter username: " username
 
 	local locked=$(check_account_locked ${all_logins[$username]} )
-	echo "locked: $locked" >&2
 	
 	if [[ "$locked" == "true" ]]; then
 		echo >&2
@@ -238,11 +237,10 @@ else
 		echo ""
 		return
 	elif [[ "$locked" == "" ]]; then
-		echo ""
+		echo "its empty" >&2
 		return
 	elif [[ "$locked" == "false" ]]; then
 
-		echo "Throough false locked"
 		IFS=":" read -ra arr <<< "${all_logins[$username]}"
 
 		local stored_password="${arr[0]}"
@@ -255,8 +253,9 @@ else
 
 			local current_time=$(date +%s)
 
+
 			if [[ "$password" == "$stored_password" ]]; then
-				
+				echo "get in here" >&2
 				local fast_attempts=0
 				for t in "${fail_times[@]}"; do
 					if (( start - t -le 60 )); then
@@ -268,10 +267,13 @@ else
 				if (( fast_attempts >= 3 )); then
 					echo >&2
 					echo "Suspicious activity detected! Repeated login attempts within 60s" >&2
-
-					echo "$username $password false"
-					return
 				fi
+
+				echo "$username"
+				echo "$password"
+				echo "false"
+				return
+				
 			else
 				echo >&2
 				echo "Incorrect password you have $((3 - $i)) attempts remaining to try again!" >&2
@@ -281,40 +283,35 @@ else
 			fi
 		done
 
-		for t in ${fail_times[@]}; do
-			if (( start - t <= 60 )); then
-				new_times+=("$t")
-			fi
-		done
-		# Dectect suspicous activity if failed login quickly
-		if [ ${#fail_times[@]} -ge 3 ]; then
-			echo >&2
-			echo "Suspicious activity detected! Repeated login attempts within 60s" >&2
-		fi
-
 		echo >&2
 		echo "Account with the username -$username- has been locked due to 3 incorrect password entries" >&2
 		echo >&2
 		
-		# Find the index of the username, finding location of line to edit
-		local i=0
 
-		for key in ${!all_logins[@]}; do
-			if [[ "$key" == "$username" ]]; then
-				break
-			fi
-			((i++))
-		done
 		# Overwrite old file with new line inserted
 		local lines=()
+		local i=0
+		local target=0
+
 		while IFS= read -r line; do
+
+			local first="${line%%:*}"
+			# Correct index when username matches first field of line
+			if [[ "$first" == "$username" ]]; then
+				target=i
+			fi
+
 			lines+=("$line")
+			((i++))
+
 		done < "login_details.txt"
 
-		line[i]="$username:$password:True"
+		lines[target]="$username:$password:True"
 		printf "%s\n" "${lines[@]}" > "login_details.txt"
 
-		echo "$username $password False"
+		echo "$username"
+		echo "/"
+		echo "False"
 		return
 	fi
 
@@ -334,6 +331,8 @@ read -r -p "Enter new password (minimum length 8 chars): " Gpassword
 if [ ${#Gusername} -gt 5 ]; then
 	if [ ${#Gpassword} -gt 7 ]; then
 		Gnew="true"
+		echo "we through new login" >&2
+		echo "$Gusername $Gpassword $Gnew" >&2
 		return
 	else
 		echo >&2
@@ -364,10 +363,8 @@ check_account_locked() {
 	local locked_status="${entry##*:}"
 
 	if [[ "${locked_status,,}" == "true"  ]]; then
-		echo "returned true" >&2
 		echo "true"
 	else
-		echo "returned false" >&2
 		echo "false"
 	fi
 }
@@ -404,11 +401,10 @@ for log in ${logins[@]}; do
 	all_logins["$user"]="$value"
 	order+=("$user")
 done
-echo "order:"
-echo ${order[@]}
 
-local current_student_id=3
-local logged_in=true
+
+local current_student_id=""
+local logged_in=false
 
 # Create submission log with heading if its not already made, or doesn't have a heading
 if [ -f "submission_log.txt" ]; then
@@ -439,7 +435,9 @@ done < "submission_log.txt"
 while true; do 
 
 if [ "$logged_in" == true ]; then
-	local user=${order[(($current_student_id-1))]}
+	local num
+	num=$((current_student_id - 1))
+	local user="${order[$num]}"
 
 	printf '%.0s-' {1..20}
 	printf "\n"
@@ -484,16 +482,17 @@ case "$choice" in
 		;;
 	4) 
 		mapfile -t login_details <<< "$(login ${all_logins[@]})"
-		echo "All logins:"
-		echo ${all_logins[0]}
+		echo "all dets"
+		echo ${login_details[@]}
 		if [ ${#login_details[@]} -gt 0 ]; then
-			echo "details exist"
-			if [[ ${login_details[3]} == "true" ]]; then
-				
-				printf "%s\n" "${login_details[1]}:${login_details[2]}:False" >> "login_details.txt"
+			if [[ ${login_details[-1]} == "true" ]]; then
+				echo "details"
+				echo ${login_details[0]}
+				echo ${login_details[1]}
+				printf "%s\n" "${login_details[0]}:${login_details[1]}:False" >> "login_details.txt"
 
-				all_logins[login_details[1]]="${login_details[2]}:False}"
-				order+=(${login_details[1]})
+				all_logins[login_details[0]]="${login_details[1]}:False}"
+				order+=(${login_details[0]})
 				echo ${order[@]}
 				echo 
 				echo "New login details saved!"
@@ -505,8 +504,8 @@ case "$choice" in
 				echo
 
 			else
-				if [[ ${login_details[2]} == "" ]]; then
-					all_logins[login_details[1]]="${all_logins[login_details[2]]%%:*}:True"
+				if [[ ${login_details[1]} == "/" ]]; then
+					all_logins[login_details[0]]="${all_logins[login_details[1]]%%:*}:True"
 					logged_in=false
 					current_student_id=""
 
@@ -523,6 +522,7 @@ case "$choice" in
 						((x++))
 					done
 					current_student_id="$x"
+					echo "id = $current_student_id"
 				fi
 			fi
 		fi
