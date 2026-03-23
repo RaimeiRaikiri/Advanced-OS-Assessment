@@ -453,7 +453,7 @@ def main():
 
 					else:
 						if login_details[1] == "":
-							all_logins[login_details[0]][1] = True
+							all_logins[login_details[0]][1] = "True"
 							# Sign out
 							logged_in = False
 							current_student_id = ""
@@ -474,6 +474,10 @@ def main():
 					# Sign out functionality
 					logged_in = False
 					current_student_id = ""
+					
+					print()
+					print("Signed out!")
+					print()
 				else:
 					exit_system()
 			case 6:
