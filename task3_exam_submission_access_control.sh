@@ -42,8 +42,8 @@ fi
 }
 
 submit_file() {
-
-local -a all_files=("$@")
+local id="$1"
+local -a all_files=("$2")
 local files=()
 
 # Put all possible submission files in an array excluding git files
@@ -101,7 +101,7 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 			fi
 			
 			if [[ ${#identical_filesize[@]} -eq 0 ]]; then
-				log_event "" "$file_path" "Submission"
+				log_event "$id" "$file_path" "Submission"
 				echo >&2
 				echo "File submitted successfully!" >&2
 			
@@ -116,7 +116,7 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 					fi
 				done
 				if [ identical_file == true ]; then
-					log_event "" "$file_path" "Submission"
+					log_event "$id" "$file_path" "Submission"
 					echo >&2
 					echo "File submitted successfully!" >&2
 					
@@ -154,20 +154,19 @@ echo "$itr"
 }
 
 log_event() {
-	if [[ "$3" == "Submission" ]] || [[ "$3" == "submission" ]]; then
-		printf "%-30s%-20s" "$(date '+%Y-%m-%d %H:%M:%S')" "$3" >> "submission_log.txt"
-		local arr=("$@")
+	printf "%-30s%-20s" "$(date '+%Y-%m-%d %H:%M:%S')" "$3" >> "submission_log.txt"
+	local arr=("$@")
 
-		for ((i=0; i<2; i++)); do
-			if [ -z "${arr[i]}" ]; then
- 				printf "%-20s" "" >> "submission_log.txt"
-			else
-				printf "%-20s" "${arr[i]}" >> "submission_log.txt"
-			fi
-		done
+	for ((i=0; i<2; i++)); do
+		if [ -z "${arr[i]}" ]; then
+			printf "%-20s" "" >> "submission_log.txt"
+		else
+			printf "%-20s" "${arr[i]}" >> "submission_log.txt"
+		fi
+	done
 		
-		printf $"\n" >> "submission_log.txt" 
-	fi
+	printf $"\n" >> "submission_log.txt" 
+
 }
 
 get_logins() {
@@ -191,7 +190,6 @@ for log in ${logins[@]}; do
 	all_logins["$user"]="$value"
 done
 
-echo ${#all_logins[@]}
 
 if [ ${#all_logins[@]} == 0 ]; then
 	while true ; do
@@ -236,8 +234,8 @@ else
 
 		echo ""
 		return
-	elif [[ "$locked" == "" ]]; then
-		echo "its empty" >&2
+	elif [[ "$locked" == "@" ]]; then
+		echo "@"
 		return
 	elif [[ "$locked" == "false" ]]; then
 
@@ -255,7 +253,6 @@ else
 
 
 			if [[ "$password" == "$stored_password" ]]; then
-				echo "get in here" >&2
 				local fast_attempts=0
 				for t in "${fail_times[@]}"; do
 					if (( start - t -le 60 )); then
@@ -280,6 +277,7 @@ else
 				echo >&2
 
 				fail_times+=("$current_time")
+				log_event "" "" "Login:Fail"
 			fi
 		done
 
@@ -287,10 +285,11 @@ else
 		echo "Account with the username -$username- has been locked due to 3 incorrect password entries" >&2
 		echo >&2
 		
+		log_event "" "" "Account Locked"
 
 		# Overwrite old file with new line inserted
 		local lines=()
-		local i=0
+		local y=0
 		local target=0
 
 		while IFS= read -r line; do
@@ -298,11 +297,11 @@ else
 			local first="${line%%:*}"
 			# Correct index when username matches first field of line
 			if [[ "$first" == "$username" ]]; then
-				target=i
+				target=y
 			fi
 
 			lines+=("$line")
-			((i++))
+			((y++))
 
 		done < "login_details.txt"
 
@@ -356,7 +355,9 @@ check_account_locked() {
 	local entry="$1"
 
 	if [[ -z "$entry" ]]; then
-		echo "username doesnt exist" >&2
+		echo >&2
+		echo "Username does not exist!" >&2
+		echo "@"
 		return
 	fi
 
@@ -456,7 +457,7 @@ echo
 case "$choice" in
 
 	1) 
-		local temp=$(submit_file ${all_files[@]})
+		local temp=$(submit_file "$current_student_id" ${all_files[@]})
 		all_files+=("$temp") ;;
 	2) 
 		local file_submitted=$(check_file_submitted ${all_files[@]})
@@ -482,18 +483,15 @@ case "$choice" in
 		;;
 	4) 
 		mapfile -t login_details <<< "$(login ${all_logins[@]})"
-		echo "all dets"
-		echo ${login_details[@]}
-		if [ ${#login_details[@]} -gt 0 ]; then
-			if [[ ${login_details[-1]} == "true" ]]; then
-				echo "details"
-				echo ${login_details[0]}
-				echo ${login_details[1]}
-				printf "%s\n" "${login_details[0]}:${login_details[1]}:False" >> "login_details.txt"
+		echo ${login_detials[@]}
+		if [[ "$login_details" != "@" ]]; then
 
-				all_logins[login_details[0]]="${login_details[1]}:False}"
-				order+=(${login_details[0]})
-				echo ${order[@]}
+			if [[ ${login_details[-1]} == "true" ]]; then
+				printf "%s\n" "${login_details[-3]}:${login_details[-2]}:False" >> "login_details.txt"
+
+				all_logins[login_details[-3]]="${login_details[-2]}:False}"
+				order+=(${login_details[-3]})
+
 				echo 
 				echo "New login details saved!"
 				
@@ -505,24 +503,23 @@ case "$choice" in
 
 			else
 				if [[ ${login_details[1]} == "/" ]]; then
-					all_logins[login_details[0]]="${all_logins[login_details[1]]%%:*}:True"
+					all_logins[login_details[-3]]="${all_logins[login_details[-2]]%%:*}:True"
 					logged_in=false
 					current_student_id=""
 
 				else
-					echo
-					echo "Login successful, Hello ${login_details[0]}!"
 
 					logged_in=true
-					local x=0
-					for user in ${order[@]}; do
-						if [[ "$user" == ${order[x]} ]]; then
+					local x=1
+
+					for name in ${order[@]}; do
+						if [[ "$name" == ${login_details[-3]} ]]; then
 							break
 						fi
 						((x++))
 					done
 					current_student_id="$x"
-					echo "id = $current_student_id"
+					echo "Login successful, Hello ${login_details[-3]}!"
 				fi
 			fi
 		fi
