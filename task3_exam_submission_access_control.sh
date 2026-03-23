@@ -90,7 +90,7 @@ if [[ "$file_extension" == "docx" ]] || [[ "$file_extension" == "pdf" ]]; then
 
 			local -a identical_filesizes=()
 			if [ ${#all_files[@]} -ge 1 ]; then
-				for file in "$all_files"; do
+				for file in ${all_files[@]}; do
 					if [[ "$file_size" != $(wc -c < "$file") ]]; then
 						continue
 					else
@@ -154,20 +154,21 @@ echo "$itr"
 }
 
 log_event() {
-	printf "%-30s%-20s" "$(date '+%Y-%m-%d %H:%M:%S')" "$3" >> "submission_log.txt"
+	printf "%-30s%-20s" "$(date '+%Y-%m-%d %H:%M:%S')" "$3" >> "submission_log.txt" 
 	local arr=("$@")
 
-	for ((i=0; i<2; i++)); do
-		if [ -z "${arr[i]}" ]; then
-			printf "%-20s" "" >> "submission_log.txt"
+	for ((z=0; z<2; z++)); do
+		if [ -z "${arr[z]}" ]; then
+			printf "%-20s" "" >> "submission_log.txt" 
 		else
-			printf "%-20s" "${arr[i]}" >> "submission_log.txt"
+			printf "%-20s" "${arr[z]}" >> "submission_log.txt" 
 		fi
 	done
 		
-	printf $"\n" >> "submission_log.txt" 
+	printf "\n" >> "submission_log.txt"
 
 }
+
 
 get_logins() {
 	local logins=()
@@ -232,7 +233,8 @@ else
 		echo "Account -$username- LOCKED! Administrator required to edit files to unlock!" >&2
 		echo >&2
 
-		echo ""
+		log_event "" "" "Account Locked"
+		echo "@"
 		return
 	elif [[ "$locked" == "@" ]]; then
 		echo "@"
@@ -242,29 +244,13 @@ else
 		IFS=":" read -ra arr <<< "${all_logins[$username]}"
 
 		local stored_password="${arr[0]}"
-		local fail_times=()
+		local login_attempts=()
 
-		local new_times=()
-
-		for ((i=1; i<4; i++)); do
-			read -r -p "Enter password: " password
-
-			local current_time=$(date +%s)
+		for ((i=3; i>0; i--)); do
+			read -r -p "Enter password: " password < /dev/tty
 
 
 			if [[ "$password" == "$stored_password" ]]; then
-				local fast_attempts=0
-				for t in "${fail_times[@]}"; do
-					if (( start - t -le 60 )); then
-						((fast_attempts++))
-					fi
-				done
-
-
-				if (( fast_attempts >= 3 )); then
-					echo >&2
-					echo "Suspicious activity detected! Repeated login attempts within 60s" >&2
-				fi
 
 				echo "$username"
 				echo "$password"
@@ -272,14 +258,28 @@ else
 				return
 				
 			else
-				echo >&2
-				echo "Incorrect password you have $((3 - $i)) attempts remaining to try again!" >&2
-				echo >&2
 
-				fail_times+=("$current_time")
-				log_event "" "" "Login:Fail"
+				
+					echo >&2
+					echo "Incorrect password you have $i attempts remaining to try again!" >&2
+					echo >&2 
+
+					login_attempts+=($(date +%s))
+					log_event "" "" "Login:Failed" >&2
+		
 			fi
 		done
+
+		local diff=$(( login_attempts[-1] - login_attempts[-3] ))
+
+		if [[ $diff -le 60 ]]; then
+			echo >&2
+			echo "Suspicious activity! Login attempts are too fast" >&2
+			echo >&2
+
+			log_event "" "" "Suspicious Activity"
+
+		fi
 
 		echo >&2
 		echo "Account with the username -$username- has been locked due to 3 incorrect password entries" >&2
@@ -291,13 +291,15 @@ else
 		local lines=()
 		local y=0
 		local target=0
+		local pass=""
 
 		while IFS= read -r line; do
 
 			local first="${line%%:*}"
 			# Correct index when username matches first field of line
 			if [[ "$first" == "$username" ]]; then
-				target=y
+				target="$y"
+				pass=$(echo "$line" | cut -d':' -f2)
 			fi
 
 			lines+=("$line")
@@ -305,7 +307,7 @@ else
 
 		done < "login_details.txt"
 
-		lines[target]="$username:$password:True"
+		lines["$target"]="$username:$pass:True"
 		printf "%s\n" "${lines[@]}" > "login_details.txt"
 
 		echo "$username"
@@ -483,9 +485,9 @@ case "$choice" in
 		;;
 	4) 
 		mapfile -t login_details <<< "$(login ${all_logins[@]})"
-		echo ${login_detials[@]}
-		if [[ "$login_details" != "@" ]]; then
 
+		if [[ "$login_details" != "@" ]]; then
+			
 			if [[ ${login_details[-1]} == "true" ]]; then
 				printf "%s\n" "${login_details[-3]}:${login_details[-2]}:False" >> "login_details.txt"
 
@@ -502,8 +504,9 @@ case "$choice" in
 				echo
 
 			else
-				if [[ ${login_details[1]} == "/" ]]; then
-					all_logins[login_details[-3]]="${all_logins[login_details[-2]]%%:*}:True"
+
+				if [[ ${login_details[-2]} == "/" ]]; then
+					all_logins[login_details[-3]]="${all_logins[login_details[1]]%%:*}:True"
 					logged_in=false
 					current_student_id=""
 
